@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -eu
+
+if [[ ! -f .ENV/requirements-hash ]] || [[ $(cat .ENV/requirements-hash) != $(openssl dgst -sha256 requirements.txt) ]]; then
+    rm -rf .ENV
+    virtualenv .ENV --python=python3.7
+    source .ENV/bin/activate
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    openssl dgst -sha256 requirements.txt >  .ENV/requirements-hash
+fi
+source .ENV/bin/activate
+python3 main.py "${@}"
+deactivate
