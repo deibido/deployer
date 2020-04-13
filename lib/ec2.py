@@ -26,6 +26,7 @@ def default_data(vpc_id: str) -> VpcDetails:
     return vpc_details
 
 
+# Write the template locally to inspect it in case there are any validation errors
 def write_template(template: Template) -> None:
     template_dir = f"{os.getcwd()}/templates"
     if not os.path.exists(template_dir):
@@ -99,6 +100,15 @@ def make_template(
         VPCZoneIdentifier=vpc_deets.subnet_ids,
     ))
 
+    # TODO If this project was using a paid AWS account we'd create an ELB
+    # TODO here and attach it to the Autoscaling group and have a route53
+    # TODO alias set to the ELB's public DNS. This would handle service discovery
+    # TODO and HA by balancing traffic across web servers deployed across multiple AZs
+
+    # TODO Also monitoring and alerting could be set up with Cloudwatch metrics
+    # TODO that publish to an SNS topic which can have email, SMS or even
+    # TODO HTTP endpoint subscriptions sending messages to a 3rd party service like OpsGenie
+
     write_template(t)
     return t
 
@@ -142,3 +152,32 @@ def deploy(
     cf_cli = boto3.client("cloudformation")
     validate_template(cf_cli, template)
     launch_template(cf_cli, name, replicas, docker_image, template)
+
+
+def update(
+        name: str,
+        replicas: int,
+        docker_image: str,
+) -> None:
+    cf_cli = boto3.client("cloudformation")
+    # Could implement our own check to make sure param values have changed
+    # but Cloudformation provides the check already and returns helpful errors
+    cf_cli.update_stack(
+        StackName=name,
+        Parameters=[
+            {
+                "ParameterKey": "Replicas",
+                "ParameterValue": str(replicas),
+            },
+            {
+                "ParameterKey": "DockerImage",
+                "ParameterValue": docker_image,
+            },
+        ],
+        UsePreviousTemplate=True,
+    )
+
+
+def teardown(name: str) -> None:
+    cf_cli = boto3.client("cloudformation")
+    cf_cli.delete_stack(StackName=name)

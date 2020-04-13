@@ -1,6 +1,6 @@
 import click
 
-from lib.ec2 import deploy as ec2_deploy
+from lib.ec2 import deploy as ec2_deploy, teardown as ec2_teardown, update as ec2_update
 from lib.s3 import deploy as s3_deploy, teardown as s3_teardown, update as s3_update
 
 
@@ -36,9 +36,19 @@ def s3(
 @run.command()
 @click.option("--mode", help="Operation mode", prompt="Create, update or delete", default="create")
 @click.option("--project-name", help="Specify the project name.", prompt="Project name", default="sloth-online")
-@click.option("--replicas", help="Number of replicas (for HA)", prompt="Replicas", default=1)
-@click.option("--docker-image", help="Docker image to deploy", prompt="Docker image (<REPO>/<IMAGE>:<TAG>)", default="davesz/sloth-online")
-@click.option("--vpc-id", help="VPC in which to deploy the service", prompt="VPC ID", default="vpc-3d658f44")
+@click.option("--replicas", help="Number of replicas (for HA)", prompt="Replicas (ignore for delete)", default=1)
+@click.option(
+    "--docker-image",
+    help="Docker image to deploy",
+    prompt="Docker image (<REPO>/<IMAGE>:<TAG>) (ignore for delete)",
+    default="davesz/sloth-online",
+)
+@click.option(
+    "--vpc-id",
+    help="VPC in which to deploy the service",
+    prompt="VPC ID (ignore for update or delete)",
+    default="vpc-3d658f44",
+)
 def ec2(
         mode: str,
         project_name: str,
@@ -54,13 +64,9 @@ def ec2(
             docker_image,
             vpc_id
         )
-
-#
-# @click.command()
-# @click.option("--asg-name", help="Name of the ASG to scale", prompt="Auto-scaling group name:")
-# def scale(
-#         asg_name: str,
-# ) -> str:
-#
-#     print(service + " " + tmp)
-#     return service + tmp
+    elif mode.lower() == "update":
+        ec2_update(project_name, replicas, docker_image)
+    elif mode.lower() == "delete":
+        ec2_teardown(project_name)
+    else:
+        raise OptionError("Did not specify a suitable mode of operation: Create, Update or Delete")
