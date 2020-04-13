@@ -135,3 +135,11 @@ dmypy.json
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+
+# Cloudformation templates
+templates/
+
+# Normally we'd ignore the web directory and its contents but for
+# this exercise I'm keeping it here to demonstrate the library function
+
+# web/
