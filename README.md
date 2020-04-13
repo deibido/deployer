@@ -112,4 +112,5 @@ we can use TLS encrytion easily with our load balancers
 - Separate the cloud orchestration from the app deployment. Cloud infrastructure should be
 relatively immutable compared to app development. It would be safer to separate the
 infrastructure deployment from the app deployment
-- Use real container orchestration (ECS, EKS etc.) instead of home rolled scripts
+- Use real container orchestration (ECS, EKS etc.) instead of home-rolled scripts
+- Fix CLI so users don't have to pass arguments that won't be used
